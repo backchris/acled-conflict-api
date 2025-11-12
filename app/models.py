@@ -25,8 +25,9 @@ class ConflictData(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    # Relationship to Feedback
-    feedback = db.relationship('Feedback', backref='conflict_data', lazy='select')
+    # Relationship to Feedback (one-to-many) via explicit FK on Feedback.conflict_id
+    # use cascade so removing a conflict removes related feedback if desired
+    feedback = db.relationship('Feedback', backref='conflict_data', lazy='select', cascade='all, delete-orphan')
     # Unique index on (country, admin1) for faster lookups, enforces uniqueness, enables safe csv imports
     __table_args__ = (db.UniqueConstraint('country', 'admin1', name='ux_country_admin1'),Index('idx_country', 'country'),) 
 
@@ -35,6 +36,8 @@ class Feedback(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable = False, index=True)
+    # Optional explicit foreign key to ConflictData for robust linking
+    conflict_id = db.Column(db.Integer, db.ForeignKey('conflict_data.id'), nullable=True, index=True)
     country = db.Column(db.String(100), nullable=False, index=True)
     admin1 = db.Column(db.String(100), nullable=False)
     text = db.Column(db.Text, nullable=False)

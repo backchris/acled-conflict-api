@@ -1,4 +1,4 @@
-"""Test auth utility functions."""
+"""Test auth utility helper functions"""
 from app.auth_utils import hash_password, verify_password, validate_password, require_admin
 import pytest
 
@@ -57,7 +57,7 @@ def test_validate_password_missing_hashtag():
 
 
 def test_require_admin_decorator_exists():
-    """Test require_admin decorator can be imported and applied"""
+    """Test require_admin decorator can be imported and used to wrap around functions"""
     # Create a simple test function
     @require_admin
     def test_function():

@@ -91,7 +91,7 @@ class RiskScoreResponse(BaseModel):
 # ---Feedback Schemas---
 class FeedbackCreateRequest(BaseModel):
     """User feedback submission (POST)"""
-    text: str = Field(..., min_length=20, max_length=600, description="Feedback must be 20-600 characters")
+    text: str = Field(..., min_length=10, max_length=500, description="Feedback must be 10-500 characters")
 
 
 class FeedbackResponse(BaseModel):

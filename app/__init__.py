@@ -34,13 +34,15 @@ def create_app(config = DevelopmentConfig):
 
     # 5. Register blueprints (routes)
     try:
-        from .routes import auth_bp, conflict_bp
-        if auth_bp is not None:
-            app.register_blueprint(auth_bp, url_prefix='/auth')
-        if conflict_bp is not None:
-            app.register_blueprint(conflict_bp, url_prefix='/conflictdata')
+        from .routes.auth import auth_bp
+        app.register_blueprint(auth_bp, url_prefix='/auth')
     except ImportError:
-        # Routes don't exist yet - that's ok for now
+        pass
+    
+    try:
+        from .routes.conflict import conflict_bp
+        app.register_blueprint(conflict_bp, url_prefix='/conflictdata')
+    except ImportError:
         pass
     
     # 6. Import models so SQLAlchemy registers them, then create tables
