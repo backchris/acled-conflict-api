@@ -34,8 +34,8 @@ ENV/
 instance/
 
 # Data and uploads
-data/
-*.csv
+data/*
+!data/acled_sample_conflict_data.csv
 uploads/
 
 # Logs
