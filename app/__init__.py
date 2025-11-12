@@ -1,15 +1,15 @@
 from flask import Flask, jsonify
-from flask_cors import CORS # security mechanism to control which websites access API 
+from flask_cors import CORS
 
 from .extensions import db, jwt
-from .config import DevelopmentConfig
+from .config import Config
 
-def create_app(config = DevelopmentConfig):
+def create_app(config=Config):
     """
     Create Flask App instance
     
     Arguments:
-        config -- configuration class to use (Config, DevelopmentConfig, TestingConfig - default: DevelopmentConfig)
+        config -- configuration class to use (default: Config)
     Returns:
         Configured Flask app instance
     """

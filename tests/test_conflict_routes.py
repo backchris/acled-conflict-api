@@ -1,7 +1,7 @@
 """Tests for conflict data routes"""
 import pytest
 from app import create_app
-from app.config import TestingConfig
+from app.config import Config
 from app.extensions import db
 from app.models import ConflictData, User
 
@@ -9,7 +9,7 @@ from app.models import ConflictData, User
 @pytest.fixture
 def app():
     """Create and configure a test app"""
-    app = create_app(TestingConfig)
+    app = create_app(Config)
     with app.app_context():
         db.create_all()
         yield app

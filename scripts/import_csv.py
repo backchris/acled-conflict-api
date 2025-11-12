@@ -13,12 +13,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app import create_app
 from app.extensions import db
 from app.models import ConflictData
-from app.config import DevelopmentConfig
+from app.config import Config
 
 
 def import_csv(csv_path: str):
     """Import conflict data from CSV file"""
-    app = create_app(DevelopmentConfig)
+    app = create_app(Config)
     
     with app.app_context():
         csv_file = Path(csv_path)
