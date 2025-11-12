@@ -63,7 +63,7 @@ def login():
 
         # 4. Generate JWT token
         token = create_access_token(
-            identity=user.id,
+            identity=str(user.id),
             additional_claims={'is_admin': user.is_admin})
     
         # 5. Return token, verified with TokenResponse Pydantic schema
