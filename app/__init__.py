@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS # security mechanism to control which websites access API 
 
-from .extensions import db, jwt, celery
+from .extensions import db, jwt
 from .config import DevelopmentConfig
 
 def create_app(config = DevelopmentConfig):
@@ -24,15 +24,7 @@ def create_app(config = DevelopmentConfig):
     jwt.init_app(app)
     CORS(app)  # Enable CORS for all routes
 
-    #4. Configure Celery - use so user doesn't have to wait by running background tasks asynchronously
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-    
-    celery.Task = ContextTask
-
-    # 5. Register blueprints (routes)
+    # 4. Register blueprints (routes)
     try:
         from .routes.auth import auth_bp
         app.register_blueprint(auth_bp, url_prefix='/auth')

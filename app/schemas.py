@@ -79,9 +79,8 @@ class CountryDataResponse(BaseModel):
 
 
 class RiskScoreResponse(BaseModel):
-    """Average risk score for a country-admin1 combination using background job"""
+    """Average risk score for a country with caching"""
     country: str
-    admin1: str
     avg_score: float
     computed_at: datetime
     

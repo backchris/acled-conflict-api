@@ -225,3 +225,143 @@ class TestGetCountryConflicts:
         response = client.get('/conflictdata/')
         # This will match the /<countries> pattern with empty string
         assert response.status_code == 404
+
+
+class TestGetCountryRiskscore:
+    """Tests for GET /conflictdata/:country/riskscore endpoint"""
+
+    def test_get_riskscore_cache_hit(self, client, sample_conflict_data):
+        """Test getting cached risk score"""
+        # First request computes and caches
+        response1 = client.get('/conflictdata/Kenya/riskscore')
+        assert response1.status_code == 200
+        data1 = response1.get_json()
+        assert data1['country'] == 'Kenya'
+        assert 'avg_score' in data1
+        # Kenya has 3 regions with scores: 7, 4, 3 → average = 4.66
+        expected_avg = (7 + 4 + 3) / 3
+        assert abs(data1['avg_score'] - expected_avg) < 0.01  # Within 0.01 tolerance due to rounding
+        assert 'computed_at' in data1
+        
+        # Second request gets cached (same data and timestamp)
+        response2 = client.get('/conflictdata/Kenya/riskscore')
+        assert response2.status_code == 200
+        data2 = response2.get_json()
+        assert data1 == data2
+        assert data1['computed_at'] == data2['computed_at']  # Same cache
+
+    def test_get_riskscore_not_found(self, client):
+        """Test risk score for non-existent country"""
+        response = client.get('/conflictdata/NonexistentCountry/riskscore')
+        assert response.status_code == 404
+        assert 'error' in response.get_json()
+
+
+class TestPostFeedback:
+    """Tests for POST /conflictdata/:admin1/userfeedback endpoint."""
+
+    def test_post_feedback_success(self, client, sample_conflict_data):
+        """Test submitting feedback successfully"""
+        # Create a user first
+        from app.auth_utils import hash_password
+        user = User(username='testuser', password_hash=hash_password('test#pass1'), is_admin=False)
+        db.session.add(user)
+        db.session.commit()
+        
+        # Login to get token
+        login_response = client.post('/auth/login', json={'username': 'testuser', 'password': 'test#pass1'})
+        token = login_response.get_json()['access_token']
+        
+        # Submit feedback
+        response = client.post(
+            '/conflictdata/Nairobi/userfeedback',
+            headers={'Authorization': f'Bearer {token}'},
+            json={'text': 'This is a test feedback about Nairobi'}
+        )
+        assert response.status_code == 201
+        data = response.get_json()
+        assert data['text'] == 'This is a test feedback about Nairobi'
+        assert data['admin1'] == 'Nairobi'
+        assert data['user_id'] == user.id
+
+    def test_post_feedback_missing_auth(self, client, sample_conflict_data):
+        """Test feedback without JWT token"""
+        response = client.post(
+            '/conflictdata/Nairobi/userfeedback',
+            json={'text': 'This should fail'}
+        )
+        assert response.status_code == 401
+
+    def test_post_feedback_admin1_not_found(self, client, sample_conflict_data):
+        """Test feedback for non-existent admin1"""
+        from app.auth_utils import hash_password
+        user = User(username='testuser2', password_hash=hash_password('test#pass1'), is_admin=False)
+        db.session.add(user)
+        db.session.commit()
+        
+        login_response = client.post('/auth/login', json={'username': 'testuser2', 'password': 'test#pass1'})
+        token = login_response.get_json()['access_token']
+        
+        response = client.post(
+            '/conflictdata/NonexistentAdmin1/userfeedback',
+            headers={'Authorization': f'Bearer {token}'},
+            json={'text': 'This should fail'}
+        )
+        assert response.status_code == 404
+
+
+class TestDeleteConflictData:
+    """Tests for DELETE /conflictdata endpoint"""
+
+    def test_delete_conflict_data_success(self, client, sample_conflict_data):
+        """Test deleting conflict data as admin"""
+        from app.auth_utils import hash_password
+        admin_user = User(username='admin', password_hash=hash_password('admin#pass1'), is_admin=True)
+        db.session.add(admin_user)
+        db.session.commit()
+        
+        login_response = client.post('/auth/login', json={'username': 'admin', 'password': 'admin#pass1'})
+        token = login_response.get_json()['access_token']
+        
+        response = client.delete(
+            '/conflictdata',
+            headers={'Authorization': f'Bearer {token}'},
+            json={'country': 'Kenya', 'admin1': 'Nairobi'}
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['deleted'] == 1
+
+    def test_delete_conflict_data_not_admin(self, client, sample_conflict_data):
+        """Test delete as non-admin user"""
+        from app.auth_utils import hash_password
+        user = User(username='testuser3', password_hash=hash_password('test#pass1'), is_admin=False)
+        db.session.add(user)
+        db.session.commit()
+        
+        login_response = client.post('/auth/login', json={'username': 'testuser3', 'password': 'test#pass1'})
+        token = login_response.get_json()['access_token']
+        
+        response = client.delete(
+            '/conflictdata',
+            headers={'Authorization': f'Bearer {token}'},
+            json={'country': 'Kenya', 'admin1': 'Nairobi'}
+        )
+        assert response.status_code == 403
+
+    def test_delete_conflict_data_not_found(self, client, sample_conflict_data):
+        """Test deleting non-existent conflict data"""
+        from app.auth_utils import hash_password
+        admin_user = User(username='admin2', password_hash=hash_password('admin#pass1'), is_admin=True)
+        db.session.add(admin_user)
+        db.session.commit()
+        
+        login_response = client.post('/auth/login', json={'username': 'admin2', 'password': 'admin#pass1'})
+        token = login_response.get_json()['access_token']
+        
+        response = client.delete(
+            '/conflictdata',
+            headers={'Authorization': f'Bearer {token}'},
+            json={'country': 'NonexistentCountry', 'admin1': 'NonexistentAdmin1'}
+        )
+        assert response.status_code == 404

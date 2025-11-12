@@ -51,9 +51,6 @@ class RiskCache(db.Model): #precomputed risk scores for fast retrieval
     __tablename__ = 'risk_cache'
 
     id = db.Column(db.Integer, primary_key=True)
-    country = db.Column(db.String(100), nullable=False)
-    admin1 = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(100), unique=True, nullable=False, index=True)
     avg_score = db.Column(db.Float, nullable=False)
     computed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    # Unique index on (country, admin1)
-    __table_args__ = (db.UniqueConstraint('country', 'admin1', name='ux_risk_country_admin1'),)
