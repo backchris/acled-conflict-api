@@ -43,8 +43,9 @@ def create_app(config = DevelopmentConfig):
         # Routes don't exist yet - that's ok for now
         pass
     
-    # 6. Create database tables
+    # 6. Import models so SQLAlchemy registers them, then create tables
     with app.app_context():
+        from . import models  # noqa: F401 - import to register models
         db.create_all()
     
     # 7. Health check endpoint
