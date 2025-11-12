@@ -1,6 +1,6 @@
 """Test app factory and models"""
 from app import create_app
-from app.config import TestingConfig
+from app.config import Config
 from app.extensions import db
 from app.models import User, ConflictData, Feedback
 import pytest
@@ -9,7 +9,7 @@ import pytest
 @pytest.fixture
 def app():
     """Create app with fresh test database."""
-    app = create_app(TestingConfig)
+    app = create_app(Config)
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -20,7 +20,7 @@ def app():
 
 def test_app_creates_tables():
     """Test app creates all 4 tables."""
-    app = create_app(TestingConfig)
+    app = create_app(Config)
     with app.app_context():
         tables = db.inspect(db.engine).get_table_names()
         assert 'users' in tables

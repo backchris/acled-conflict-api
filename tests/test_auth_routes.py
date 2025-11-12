@@ -1,14 +1,14 @@
 """Test authentication HTTP routes - register and login endpoints."""
 import pytest
 from app import create_app
-from app.config import TestingConfig
+from app.config import Config
 from app.extensions import db
 
 
 @pytest.fixture
 def app():
     """Create app with testing config."""
-    app = create_app(TestingConfig)
+    app = create_app(Config)
     with app.app_context():
         db.create_all()
         yield app
