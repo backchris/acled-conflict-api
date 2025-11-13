@@ -151,6 +151,12 @@ curl -X POST http://localhost:5001/conflictdata/Khartoum/userfeedback \
   -H "Content-Type: application/json" \
   -d '{"text": "Situation escalated significantly in this region"}'
 
+# If you're logged in as an admin - use $ADMIN_TOKEN instead:
+curl -X POST http://localhost:5001/conflictdata/Khartoum/userfeedback \
+  -H "Authorization: Bearer $USER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Situation escalated significantly in this region"}'
+
 # 10. Delete conflict data (admin only)
 curl -X DELETE http://localhost:5001/conflictdata \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
