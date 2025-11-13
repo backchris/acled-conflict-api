@@ -62,8 +62,8 @@ docker-compose up -d --build
 curl http://localhost:5001/health
 # Expected: {"status": "ok"}
 
-# To restart app/database: 
-docker-compose down && docker-compose up -d --build
+# To restart app/database, run the following then run docker-compose up -d --build again: 
+docker-compose down
 ```
 
 **Access the API**:
