@@ -1,0 +1,44 @@
+summary: Add user feedback about an admin1 region (authentication required)
+tags:
+  - Conflict Data
+parameters:
+  - name: admin1
+    in: path
+    type: string
+    required: true
+    description: Admin1 region name
+    example: Khartoum
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: "Bearer token (Authorization: Bearer token)"
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Feedback text (10-500 characters)
+          example: "This region needs more humanitarian resources"
+responses:
+  201:
+    description: Feedback created successfully
+    schema:
+      type: object
+      properties:
+        id: {type: integer}
+        user_id: {type: integer}
+        conflict_id: {type: integer}
+        country: {type: string}
+        admin1: {type: string}
+        text: {type: string}
+        created_at: {type: string}
+  400:
+    description: Invalid request or invalid feedback text length
+  404:
+    description: Admin1 region not found
+  500:
+    description: Internal server error or database error

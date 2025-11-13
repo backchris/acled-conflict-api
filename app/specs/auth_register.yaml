@@ -1,0 +1,33 @@
+summary: Register a new user
+tags:
+  - Authentication
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username (unique)
+          example: testuser
+        password:
+          type: string
+          description: Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char)
+          example: TestPass123!
+responses:
+  201:
+    description: User registered successfully
+    schema:
+      type: object
+      properties:
+        id: {type: integer}
+        username: {type: string}
+        created_at: {type: string}
+  409:
+    description: Username already exists
+  400:
+    description: Invalid request or password requirements not met
+  500:
+    description: Internal server error

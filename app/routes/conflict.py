@@ -1,6 +1,8 @@
 """Conflict data routes - for getting and managing conflict data"""
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from flasgger import swag_from
+import os
 from sqlalchemy import func
 from werkzeug.exceptions import NotFound, BadRequest
 from datetime import datetime, timezone
@@ -13,22 +15,23 @@ from app.schemas import (
 from app.extensions import db
 from app.auth_utils import require_admin
 
+# Get absolute path to specs directory
+_specs_dir = os.path.join(os.path.dirname(__file__), '..', 'specs')
 
 conflict_bp = Blueprint('conflict', __name__, url_prefix='')
 
 @conflict_bp.route('', methods=['GET'])
+@swag_from(os.path.join(_specs_dir, 'conflict_get_all.yaml'))
 def get_all_conflicts():
     """
+    Get all conflict data (paginated)
+
+    Note: 
+
     List conflict data for each country with pagination 
-    (default to returning 20 countries per page). 
+    (default to returning 20 countries per page).
     Note that this will result in multiple entries per country 
     since each country can have multiple admin1 entries.
-    Request:
-    - URL Params: page (int, default 1), per_page (int, default 20 and max 100)
-    Response:
-    - 200: ConflictDataListResponse with paginated conflict data
-    - 400: Invalid pagination parameters
-    - 500: Internal server error
     """
     try:
         # 1. Get pagination params from query string
@@ -61,18 +64,14 @@ def get_all_conflicts():
         return jsonify({'error': 'Internal server error'}), 500
 
 @conflict_bp.route('/<country>', methods=['GET'])
+@swag_from(os.path.join(_specs_dir, 'conflict_get_country.yaml'))
 def get_country_conflicts(country):
     """
+    Get conflict data for one or more countries
+
     Based on country name, list country-admin1 details, 
     including the admin1 names, conflict risk scores, and population per admin1. 
     Allow for multiple country names to be accepted.
-    Request:
-    - URL Param: country (single or comma separated list of country names)
-    Response:
-    - 200: CountryDataResponse single or list of multiple countries
-    - 400: Invalid request (ie. no valid country names)
-    - 404: No conflict data found for provided countries
-    - 500: Internal server error
     """
     try:
         # 1. Split countries by comma and strip whitespace
@@ -120,19 +119,17 @@ def get_country_conflicts(country):
         return jsonify({'error': 'Internal server error'}), 500
     
 @conflict_bp.route('/<country>/riskscore', methods=['GET'])
+@swag_from(os.path.join(_specs_dir, 'conflict_riskscore.yaml'))
 def get_country_riskscore(country):
     """
+    Get average risk score for a country (cached)
+
     Return the average risk score for the country using a background job 
-    to average the risk scores across admin1’s for the country
+    to average the risk scores across admin1's for the country
     
     Strategy: Cache results using RiskCache table for performance
     - First request: Compute average sync + cache it
     - Subsequent requests: Return cached average instantly
-    
-    Response:
-    - 200: Returns RiskScoreResponse with avg_score (cached or freshly computed)
-    - 404: Country not found
-    - 500: Internal server error
     """
     try:
         # 1. Check country exists in ConflictData
@@ -183,19 +180,12 @@ def get_country_riskscore(country):
 
 @conflict_bp.route('/<admin1>/userfeedback', methods=['POST'])
 @jwt_required()
+@swag_from(os.path.join(_specs_dir, 'conflict_feedback.yaml'))
 def post_user_feedback(admin1):
     """
-    Add user feedback about the admin1 (authentication required)
-    User feedback text must be at least 10 characters but no more than 500 characters
-    Request:
-    - Body: FeedbackCreateRequest (text of 10-500 chars)
-    - Header: Authorization: Bearer
+    Add user feedback about an admin1 region (authentication required)
 
-    Response:
-    - 201: Feedback created successfully
-    - 400: Invalid request
-    - 404: Admin1 region not found
-    - 500: Internal server error, Database error
+    User feedback text must be at least 10 characters but no more than 500 characters
     """
     try:
         # 1. Get user_id from JWT token
@@ -244,21 +234,12 @@ def post_user_feedback(admin1):
 @conflict_bp.route('', methods=['DELETE'])
 @jwt_required()
 @require_admin
+@swag_from(os.path.join(_specs_dir, 'conflict_delete.yaml'))
 def delete_conflict_data():
     """
-    Delete conflict data records (admin only).
+    Delete conflict data records (admin only)
+
     Allow admin user to delete entries from the table based on admin1 and country combination
-    
-    Request:
-    - Body: DeleteRequest (country, admin1)
-    - Header: Authorization : Bearer (admin JWT token)
-    
-    Response:
-    - 200: Records deleted successfully
-    - 400: Invalid request
-    - 404: No matching records found
-    - 403: Not authorized (not admin)
-    - 500: Internal server error, Database error
     """
     try:
         # 1. Parse request body

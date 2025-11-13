@@ -1,17 +1,23 @@
 """Authentication HTTP routes - register and login"""
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
+from flasgger import swag_from
+import os
 from app.models import User
 from app.extensions import db
 from app.auth_utils import validate_password, hash_password, verify_password
 from app.schemas import RegisterRequest, UserResponse, LoginRequest, TokenResponse
 
+# Get absolute path to specs directory
+_specs_dir = os.path.join(os.path.dirname(__file__), '..', 'specs')
+
 # Create Blueprint for auth routes - keeps related routes together
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
+@swag_from(os.path.join(_specs_dir, 'auth_register.yaml'))
 def register():
-    """Register a new user"""
+    """Register a new user with username and password"""
     try:
         # 1. Validate request with Pydantic schema (schemas.py)
         data = request.get_json()
@@ -47,8 +53,9 @@ def register():
         return jsonify({'error': 'Internal server error'}), 500
     
 @auth_bp.route('/login', methods=['POST'])
+@swag_from(os.path.join(_specs_dir, 'auth_login.yaml'))
 def login():
-    """Login user and return JWT token"""
+    """Login with credentials to receive JWT token"""
     try:
         # 1. Validate login request with Pydantic schema (schemas.py)
         data = request.get_json()
