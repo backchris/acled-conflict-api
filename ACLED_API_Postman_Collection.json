@@ -40,82 +40,6 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"demouser\",\n  \"password\": \"DemoPass123#\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:5001/auth/register",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5001",
-              "path": [
-                "auth",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    // Set both environment and collection variables",
-                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
-                  "    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
-                  "    console.log('Token set successfully');",
-                  "    console.log('Token: ' + jsonData.access_token.substring(0, 50) + '...');",
-                  "} else {",
-                  "    console.log('Login failed with code: ' + pm.response.code);",
-                  "    console.log('Response: ' + pm.response.text());",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"demouser\",\n  \"password\": \"DemoPass123#\"\n}"
-            },
-            "url": {
-              "raw": "http://localhost:5001/auth/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5001",
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
           "name": "Register Admin User",
           "request": {
             "method": "POST",
@@ -127,7 +51,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"adminuser\",\n  \"password\": \"AdminPass123#\"\n}"
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin#password123\"\n}"
             },
             "url": {
               "raw": "http://localhost:5001/auth/register",
@@ -141,10 +65,43 @@
                 "register"
               ]
             }
-          }
+          },
+          "description": "Step 1: Register admin user account with username 'admin'"
         },
         {
-          "name": "Login Admin",
+          "name": "Promote User to Admin (via Database)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// IMPORTANT: This step requires running a database command manually",
+                  "// Run this command in your terminal:",
+                  "// docker-compose exec db psql -U acled_user -d acled_db -c \"UPDATE users SET is_admin = true WHERE username = 'admin';\"",
+                  "console.log('STEP 2: Run database promotion command in terminal (see description)');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/health",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "description": "Step 2: MANUAL STEP - Run in terminal to promote admin user:\n\n```bash\ndocker-compose exec db psql -U acled_user -d acled_db -c \"UPDATE users SET is_admin = true WHERE username = 'admin';\"\n```\n\nThis updates the database to set is_admin=true for the admin user. This is a security best practice - admin roles are only assigned via database access, not through the API."
+        },
+        {
+          "name": "Login as Admin",
           "event": [
             {
               "listen": "test",
@@ -175,7 +132,84 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"adminuser\",\n  \"password\": \"AdminPass123#\"\n}"
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin#password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "description": "Step 3: Login as admin user and capture admin_token for use in admin-only endpoints"
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"test#password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    // Set both environment and collection variables",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
+                  "    console.log('Token set successfully');",
+                  "    console.log('Token: ' + jsonData.access_token.substring(0, 50) + '...');",
+                  "} else {",
+                  "    console.log('Login failed with code: ' + pm.response.code);",
+                  "    console.log('Response: ' + pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"test#password123\"\n}"
             },
             "url": {
               "raw": "http://localhost:5001/auth/login",
