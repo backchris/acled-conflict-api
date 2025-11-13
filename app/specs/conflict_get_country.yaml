@@ -1,0 +1,37 @@
+summary: Get conflict data for one or more countries
+tags:
+  - Conflict Data
+parameters:
+  - name: country
+    in: path
+    type: string
+    required: true
+    description: Country name (or comma-separated list for multiple countries)
+    example: Sudan
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: Bearer token
+responses:
+  200:
+    description: Conflict data for requested country/countries
+    schema:
+      type: object
+      properties:
+        country: {type: string}
+        admin1_entries:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: integer}
+              country: {type: string}
+              admin1: {type: string}
+              population: {type: integer}
+              events: {type: integer}
+              score: {type: number}
+  404:
+    description: No data found for requested country
+  500:
+    description: Internal server error

@@ -1,0 +1,38 @@
+summary: Delete conflict data records (admin only)
+tags:
+  - Conflict Data
+parameters:
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: "Bearer token (admin JWT token - Authorization: Bearer token)"
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        country:
+          type: string
+          description: Country name
+          example: Aruba
+        admin1:
+          type: string
+          description: Admin1 region name
+          example: Oranjestad
+responses:
+  200:
+    description: Records deleted successfully
+    schema:
+      type: object
+      properties:
+        deleted: {type: integer}
+  400:
+    description: Invalid request body or missing required fields
+  403:
+    description: Not authorized (user is not admin)
+  404:
+    description: No matching records found for country/admin1
+  500:
+    description: Internal server error or database error

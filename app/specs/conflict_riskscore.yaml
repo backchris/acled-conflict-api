@@ -1,0 +1,28 @@
+summary: Get average risk score for a country (cached)
+tags:
+  - Conflict Data
+parameters:
+  - name: country
+    in: path
+    type: string
+    required: true
+    description: Country name
+    example: Sudan
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: "Bearer token (Authorization: Bearer token)"
+responses:
+  200:
+    description: Average risk score for country (cached or freshly computed)
+    schema:
+      type: object
+      properties:
+        country: {type: string}
+        avg_score: {type: number}
+        computed_at: {type: string}
+  404:
+    description: Country not found or no conflict data
+  500:
+    description: Internal server error

@@ -1,0 +1,28 @@
+summary: Login and get JWT access token
+tags:
+  - Authentication
+parameters:
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          example: demouser
+        password:
+          type: string
+          example: DemoPass123#
+responses:
+  200:
+    description: "Login successful, returns JWT token"
+    schema:
+      type: object
+      properties:
+        access_token: {type: string}
+        token_type: {type: string}
+  401:
+    description: Invalid username or password
+  500:
+    description: Internal server error
