@@ -24,21 +24,14 @@ This API provides endpoints to:
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Example curl or Postman Requests](#example-curl-or-postman-requests)
-    - [Notes on Authentication](#notes-on-authentication)
-    - [Password Requirements](#password-requirements)
-- [Project Structure](#project-structure)
-- [Design Decisions & Tradeoffs Notes](#design-decisions--tradeoffs-notes)
-- [Other Useful Tech Specs](#other-useful-tech-specs)
-  - [Testing - Run All Tests](#testing--run-all-tests)
-  - [Test Coverage](#test-coverage)
-  - [Docker Containers - Services](#docker-containers---services)
-  - [Useful Docker Commands](#useful-docker-commands)
-  - [Data Import](#data-import)
-  - [Troubleshooting](#troubleshooting)
-  - [Support & Questions](#support--questions)
+1. [Quick Start](#quick-start)
+2. [Example curl or Postman Requests](#example-curl-or-postman-requests)
+3. [Project Structure](#project-structure)
+4. [Design Decisions & Tradeoffs Notes](#design-decisions--tradeoffs-notes)
+5. [Testing](#testing--run-all-tests)
+6. [Docker Setup](#docker-containers---services)
+7. [Troubleshooting](#troubleshooting)
+8. [Support & Questions](#support--questions)
 
 ---
 
@@ -68,7 +61,7 @@ docker-compose down
 
 **Access the API**:
 - **API Base URL**: `http://localhost:5001`
-- **Swagger UI**: `http://localhost:5001/apidocs/`
+- **OpenAPI Swagger UI Documentation**: `http://localhost:5001/apidocs/`
 - **Health Check**: `http://localhost:5001/health`
 - **Postman Collection**: (`ACLED_API_Postman_Collection.json`)
 
@@ -100,7 +93,7 @@ python3 run.py
 **Quick start**: Download the **Postman collection** file (`ACLED_API_Postman_Collection.json`) included in this repository for pre-configured requests.
 - **NOTE**: Postman cannot designate a user and return an admin_token. If you want to test admin functions (delete endpoint) follow instructions on using curl commands! More notes on authentication are documented on [Notes on Authentication](#notes-on-authentication)
 
-**[Optional] Alternatively if you wanted to use curl**:
+**[Optional] Alternatively if you wanted to use curl commands**:
 
 ```bash
 # Health Check
@@ -156,7 +149,7 @@ curl -X POST http://localhost:5001/conflictdata/Khartoum/userfeedback \
 
 # If you're logged in as an admin - use $ADMIN_TOKEN instead:
 curl -X POST http://localhost:5001/conflictdata/Khartoum/userfeedback \
-  -H "Authorization: Bearer $USER_TOKEN" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"text": "Situation escalated significantly in this region"}'
 
@@ -166,18 +159,16 @@ curl -X DELETE http://localhost:5001/conflictdata \
   -H "Content-Type: application/json" \
   -d '{"country": "Nigeria", "admin1": "Adamawa"}'
 ```
-
 ### Notes on Authentication
 
-**Note**: Admin role assignment requires direct database access (via `psql` or Docker). There is no API endpoint for this as a security best practice — admin roles should only be assigned by database administrators, not through the API.
+**Note**: Admin role assignment requires direct database access (via `psql` or Docker). There is no API endpoint for this as secutiy best practice — admin roles should only be assigned by database administrators, not through the API.
 
 **To promote a user to admin** (one-time setup):
 ```bash
-docker-compose exec db psql -U acled_user -d acled_db -c \
+docker-compose exec postgres psql -U postgres -d acled_conflict_api -c \
   "UPDATE users SET is_admin = true WHERE username = 'admin';"
 ```
-
-Endpoint documentation is also available via the **interactive Swagger UI** at `http://localhost:5001/apidocs/`.
+Endpoint documentation are all here: **interactive Swagger UI** at `http://localhost:5001/apidocs/`.
 
 ### Password Requirements
 
@@ -193,7 +184,7 @@ Passwords must meet these requirements:
 **Invalid examples**:
 - `password123` (missing #)
 - `pwd#1` (too short)
-
+---
 ---
 
 ## Project Structure
@@ -243,7 +234,7 @@ acled-conflict-api/
 
 ### Database Schema & Entities
 
-For this project I chose to use four tables:
+For this project I choose to use four tables:
 
 1. **users** — Stores user accounts and authentication
    - `id` (primary key)
@@ -266,7 +257,7 @@ For this project I chose to use four tables:
    - `user_id` (foreign key → users)
    - `country` (indexed)
    - `admin1` (indexed with country)
-   - `text` (10-500 char max)
+   - `text` (10- 500 char max)
    - `created_at` (indexed)
 
 4. **risk_cache** — Pre-computed average risk scores
@@ -277,62 +268,97 @@ For this project I chose to use four tables:
 
 ### Key Features
 
+
 **JWT Authentication**
-- Secure bcrypt password hashing with JWT tokens
-- Tokens include identity + admin claims for authorization
+ As per requirements used JWT Auth which features secure bcrypt password hashing. Uses JWT tokens with identity + admin claims.
+
 
 **Data Validation**
-- Pydantic schemas for all requests/responses
-- Automatic validation of datatypes for bodies
+- Pydantic schemas for all requests/responses which automatically validates datatypes for both requests and responses with bodies
 
 **API Documentation**
-- Interactive Swagger UI at `/apidocs/` 
-- 8 external YAML specification files under app/specs/
-- Postman collection for testing
+- Interactive Swagger UI at `http://localhost:5001/apidocs/`
+- 8 external YAML specification files separated under app/specs/
+- Postman collection you can import for testing
 
 **Error Handling**
-- Standard HTTP status codes (201, 400, 403, 404, 409, 500)
-- Documented in YAML spec files and Swagger UI
+- Use standard HTTP status codes (201, 400, 403, 404, 409, 500). 
+These are documented more in depth in the YAML spec files, and in Swagger UI
 
 **Performance Optimizations**
 - Risk score caching (avoid repeated aggregations)
 - Pagination for large result sets (memory-efficient)
 - Strategic database indexing
 
-### Security Measures
+## Security Measures
 
-**SQL Injection Prevention**
+### SQL Injection Prevention
 
-SQLAlchemy ORM with parameterized queries prevents SQL injection by separating SQL code from data:
+2 design decisions which prevents SQL injection:
+**1. SQLAlchemy ORM with Parameterized Queries**
+All database queries use SQLAlchemy's parameterized query API, which separates SQL code from data, as opposed to executing queries directly using db.session.execute. Example:
 ```python
 ConflictData.query.filter(ConflictData.country.in_(country_list))
 ```
+**2. URL Parameter Validation**
+Input validation on all URL path parameters to reject suspicious characters, which validates that country only contains alphanumeric, spaces, commas:
+```python
+if not all(c.isalnum() or c in ' ,' for c in country):
+    return {'error': 'Invalid characters'}, 400
+```
 
-### Performance/Optimization Notes Including Tradeoffs
+## Performance/Optimization Notes Including Tradeoffs
 
 1. **Country lookups** are indexed on conflict_data.country
-    - **Tradeoff**: O(log n) index lookups; slower writes but minimal impact on write volume
+    - **Tradeoffs**:
+        - index at idx_country` works at (O(log n)). Slower writes, minimal impact on write volume 
 
 2. **Risk scores**: cached in risk_cache table
-   - First request: computes average via SQL aggregation + caches result
+   - First request: computes average via SQL aggregation + caches
    - Subsequent requests: instant O(1) lookup
-   - **Tradeoff**: ~5KB memory per country for huge latency savings
+   - **Tradeoffs**:
+    - Cache table lookup (O(1)) after first computation leads to ,memory cost of about 5KB per country, in exchange for huge latency savings 
+
+   - **Tradeoffs**:
+    - **Redis/Celery implementation**: I thought of opting for Redis/Celery implementation of handling average risk score calculation as a true 'background job' by handling 
+    calculations asynchronously, caching them, and returning them to users much closer to instantaneously on their second request for the same query.
+
+    However, I've opted not to since it may have been scope creep and too complex for the assignment.
+    It would also require the user to always submit two GET requests for every riskscore request. 
 
 3. **Feedback queries**: composite index on (country, admin1)
-   - Efficient region-specific lookups, prevents full table scans
-   - **Tradeoff**: Slightly slower writes for faster reads
+   - Efficient region-specific feedback lookup, prevents full table scan
+   - **Tradeoffs**:
+    - Indexing with a composite `(country, admin1)` index leads to slightly slower writes, in exchange for faster reads
 
 4. **Pagination**: limit/offset with ordering
    - Avoids loading entire dataset into memory
-   - **Tradeoff**: Standard approach, works well for most result sets
+   - **Tradeoffs**:
+    - LIMIT/OFFSET with ordering is standard approach, works well for result sets
 
-**Overall Strategy**: Prioritized read performance over write speed. APIs are typically read-heavy (100:1 ratio), and geopolitical data changes infrequently.
+
+**Overall Tradeoff decision**: Prioritized read performance over write speed. APIs are typically read-heavy (100:1 ratio), and geopolitical data changes infrequently, relative to highly dynamic user-based social media data (Twitter).
 
 ---
 
-## Other Useful Tech Specs
+##  Other Useful Tech Specs
 
-### Testing - Run All Tests
+###  Data Import
+
+Sample conflict data is automatically imported with Docker on container startup (3,528 records).
+
+**To re-import manually**:
+```bash
+# Via Docker
+docker-compose exec api python3 scripts/import_csv.py data/acled_sample_conflict_data.csv
+
+# Via local setup
+python3 scripts/import_csv.py data/acled_sample_conflict_data.csv
+```
+
+---
+
+### Testing- Run All Tests
 
 ```bash
 # Via Docker
@@ -358,10 +384,10 @@ pytest -v
 
 ### Docker Containers - Services
 
-**db** — PostgreSQL 15 database
+**postgres** — PostgreSQL 15 database
 - Port: 5432
-- Credentials: acled_user / acled_password
-- Database: acled_db
+- Credentials: postgres/postgres
+- Database: acled_conflict_api
 
 **api** — Flask REST API
 - Port: 5001
@@ -373,10 +399,10 @@ pytest -v
 ```bash
 # View logs
 docker-compose logs api       # API logs
-docker-compose logs db        # Database logs
+docker-compose logs postgres  # Database logs
 
 # Access database
-docker-compose exec db psql -U acled_user -d acled_db
+docker-compose exec postgres psql -U postgres -d acled_conflict_api
 
 # Restart containers
 docker-compose restart
@@ -387,22 +413,6 @@ docker-compose down
 # Stop and remove volumes
 docker-compose down -v
 ```
-
-### Data Import
-
-Sample conflict data is automatically imported with Docker on container startup (3,528 records).
-
-**To re-import manually**:
-```bash
-# Via Docker
-docker-compose exec api python3 scripts/import_csv.py data/acled_sample_conflict_data.csv
-
-# Via local setup
-python3 scripts/import_csv.py data/acled_sample_conflict_data.csv
-```
-
----
-
 ## Troubleshooting
 
 ### API won't start
@@ -414,7 +424,7 @@ docker-compose logs api | tail -50
 
 **Common issues**:
 - Port 5001 already in use: `lsof -i :5001` and kill process
-- Database not ready: Healthcheck waits up to 50 seconds
+- Database not ready: Wait 15 seconds after `docker-compose up`
 - Permission denied: Run with `sudo` or fix Docker socket permissions
 
 ### Database connection error
@@ -443,16 +453,14 @@ docker-compose up -d --build
 
 ---
 
-## Support & Questions
+### Support & Questions
 
-For issues or questions:
+If you encounter more issues
 
 1. Check the **Swagger UI** at `/apidocs/` for endpoint documentation
 2. Review **test files** for usage examples
 3. Check **docker-compose logs** for error messages
 4. Verify **database schema** with: 
    ```bash
-   docker-compose exec db psql -U acled_user -d acled_db -c "\dt"
+   docker-compose exec postgres psql -U postgres -d acled_conflict_api -c "\dt"
    ```
-
----
