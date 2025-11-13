@@ -127,16 +127,16 @@ USER_TOKEN=$(curl -s -X POST http://localhost:5001/auth/login \
   -d '{"username": "testuser", "password": "test#password123"}' \
   | jq -r '.access_token')
 
-# Conflict Data Endpoints - Read Operations
+# Conflict Data Endpoints - Read Operations [Optional: include user token]
 # 6. Get all conflicts (paginated)
 curl -X GET "http://localhost:5001/conflictdata?page=1&per_page=10" \
   -H "Authorization: Bearer $USER_TOKEN"
 
-# 7. Search by country
+# 7. Search by country [Optional: include user token]
 curl -X GET http://localhost:5001/conflictdata/Sudan \
   -H "Authorization: Bearer $USER_TOKEN"
 
-# 8. Get risk score for a country
+# 8. Get risk score for a country [Optional: include user token]
 curl -X GET http://localhost:5001/conflictdata/Sudan/riskscore \
   -H "Authorization: Bearer $USER_TOKEN"
 
