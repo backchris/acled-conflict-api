@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Facleddata.com%2Fplatform%2Fconflict-exposure-calculator&psig=AOvVaw0IDvBiHx8G5vIbR67SfmDQ&ust=1763091402963000&source=images&cd=vfe&opi=89978449&ved=0CBYQjRxqFwoTCODU9reZ7pADFQAAAAAdAAAAABAE" alt="ACLED Logo" width="180">
+  <img src="https://public.flourish.studio/uploads/1125160/8f5d756a-56f6-4d8f-a450-67c757d5e242.png" alt="ACLED Logo" width="180">
 </div>
 
 # ACLED Conflict API Exercise
