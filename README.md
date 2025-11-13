@@ -129,6 +129,10 @@ USER_TOKEN=$(curl -s -X POST http://localhost:5001/auth/login \
 
 # Conflict Data Endpoints - Read Operations [Optional: include user token]
 # 6. Get all conflicts (paginated)
+curl -X GET "http://localhost:5001/conflictdata" \
+  -H "Authorization: Bearer $USER_TOKEN"
+
+# 6. Get all conflicts with custom paginate inputs
 curl -X GET "http://localhost:5001/conflictdata?page=1&per_page=10" \
   -H "Authorization: Bearer $USER_TOKEN"
 
