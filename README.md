@@ -225,7 +225,7 @@ acled-conflict-api/
 
 ---
 
-## Design Decisions & Notes
+## Design Decisions & Tradeoffs Notes
 
 ### Database Schema & Entities
 
