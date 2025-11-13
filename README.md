@@ -26,7 +26,7 @@ This API provides endpoints to:
     - [Notes on Authentication](#notes-on-authentication)
     - [Password Requirements](#password-requirements)
 - [Project Structure](#project-structure)
-- [Design Decisions & Notes](#design-decisions--tradeoffs-notes)
+- [Design Decisions & Tradeoffs Notes](#design-decisions--tradeoffs-notes)
 - [Other Useful Tech Specs](#other-useful-tech-specs)
   - [Testing - Run All Tests](#testing--run-all-tests)
   - [Test Coverage](#test-coverage)
