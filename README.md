@@ -91,6 +91,7 @@ python3 run.py
 ## Example curl or Postman Requests
 
 **Quick start**: Download the **Postman collection** file (`ACLED_API_Postman_Collection.json`) included in this repository for pre-configured requests.
+- **NOTE**: Postman cannot designate a user and return an admin_token. If you want to test admin functions (delete endpoint) follow instructions on curl. More notes on authentication are documented on [Notes on Authentication](#notes-on-authentication)
 
 **[Optional] Alternatively if you wanted to use curl**:
 
