@@ -61,6 +61,9 @@ docker-compose up -d --build
 # Verify API is running (optional - containers are already healthy due to healthcheck)
 curl http://localhost:5001/health
 # Expected: {"status": "ok"}
+
+# To restart app/database: 
+docker-compose down && docker-compose up -d --build
 ```
 
 **Access the API**:
