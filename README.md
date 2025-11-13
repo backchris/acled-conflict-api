@@ -317,10 +317,10 @@ if not all(c.isalnum() or c in ' ,' for c in country):
    - First request: computes average via SQL aggregation + caches
    - Subsequent requests: instant O(1) lookup
    - **Tradeoffs**:
-    - Cache table lookup (O(1)) after first computation leads to ,memory cost of about 5KB per country, in exchange for huge latency savings 
+      - Cache table lookup (O(1)) after first computation leads to ,memory cost of about 5KB per country, in exchange for huge latency savings 
 
    - **Tradeoffs**:
-    - **Redis/Celery implementation**: I thought of opting for Redis/Celery implementation of handling average risk score calculation as a true 'background job' by handling 
+      - **Redis/Celery implementation**: I thought of opting for Redis/Celery implementation of handling average risk score calculation as a true 'background job' by handling 
     calculations asynchronously, caching them, and returning them to users much closer to instantaneously on their second request for the same query.
 
     However, I've opted not to since it may have been scope creep and too complex for the assignment.
@@ -329,12 +329,12 @@ if not all(c.isalnum() or c in ' ,' for c in country):
 3. **Feedback queries**: composite index on (country, admin1)
    - Efficient region-specific feedback lookup, prevents full table scan
    - **Tradeoffs**:
-    - Indexing with a composite `(country, admin1)` index leads to slightly slower writes, in exchange for faster reads
+      - Indexing with a composite `(country, admin1)` index leads to slightly slower writes, in exchange for faster reads
 
 4. **Pagination**: limit/offset with ordering
    - Avoids loading entire dataset into memory
    - **Tradeoffs**:
-    - LIMIT/OFFSET with ordering is standard approach, works well for result sets
+      - LIMIT/OFFSET with ordering is standard approach, works well for result sets
 
 
 **Overall Tradeoff decision**: Prioritized read performance over write speed. APIs are typically read-heavy (100:1 ratio), and geopolitical data changes infrequently, relative to highly dynamic user-based social media data (Twitter).
