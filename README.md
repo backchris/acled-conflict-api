@@ -318,8 +318,6 @@ if not all(c.isalnum() or c in ' ,' for c in country):
    - Subsequent requests: instant O(1) lookup
    - **Tradeoffs**:
       - Cache table lookup (O(1)) after first computation leads to ,memory cost of about 5KB per country, in exchange for huge latency savings 
-
-   - **Tradeoffs**:
       - **Redis/Celery implementation**: I thought of opting for Redis/Celery implementation of handling average risk score calculation as a true 'background job' by handling 
     calculations asynchronously, caching them, and returning them to users much closer to instantaneously on their second request for the same query.
 
